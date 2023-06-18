@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js'
-import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js'
+import { getDatabase, ref, push, onValue, remove  } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js'
 
 
 const appSettings = {
@@ -25,15 +25,22 @@ addBtn.addEventListener('click', () => {
 })
 
 onValue(shoppingListInDB, function(snapshot){
-    let currentItem = itemsArray[i]
-    // console.log(snapshot.val()) this is an object
-    let itemsArray = Object.values(snapshot.val()) //gets converted into array of only values
 
-    clearShoppingItemsEl()
-
-    for(let i = 0; i < itemsArray.length; i++) {
-        // console.log(itemsArray[i])
-        appendItemToShoppingItemsEl(itemsArray[i])
+    if(snapshot.exists()) {
+        let itemsArray = Object.entries(snapshot.val()) //gets converted into array of only values
+        console.log(itemsArray) //this is an object
+        
+        clearShoppingItemsEl()
+        
+        for(let i = 0; i < itemsArray.length; i++) {
+            let currentItem = itemsArray[i]
+            // console.log(itemsArray[i])
+            let currentItemID = currentItem[0]
+            let currentItemValue = currentItem[1]
+            appendItemToShoppingItemsEl(currentItem) 
+        }
+    }else {
+        shoppingItemsEl.textContent = "No items here...yet"
     }
     // console.log(itemsArray)
 })
@@ -44,6 +51,19 @@ function clearShoppingItemsEl() {
 function clearInputField() {
     inputField.value = ""
 }
-function appendItemToShoppingItemsEl(itemValue) {
-    shoppingItemsEl.innerHTML += `<li>${itemValue}</li>`
+function appendItemToShoppingItemsEl(item) {
+    let itemID = item[0]
+    let itemValue = item[1]
+
+    let listEl = document.createElement('li')
+    listEl.textContent = itemValue 
+    
+    listEl.addEventListener('dblclick', () => {
+        // console.log(itemID)
+        let exactLocationOfItemInDB = ref(database, `shoppingList/${itemID}`)
+        remove(exactLocationOfItemInDB)
+    })
+
+    shoppingItemsEl.append(listEl)
+    // shoppingItemsEl.innerHTML += `<li>${itemValue}</li>`
 }
